@@ -9,7 +9,7 @@ import base64
 
 st.title ('Titanic Survival Prediction')
 st.image ('titanic.jpg')
-data = pd.read_csv ("../tested.csv")
+data = pd.read_csv ("tested.csv")
 
 # app_mode = st.sidebar.selectbox ('Select Page', ['Home', 'Prediction'])
 app_mode = 'Exploratory Data Analysis'
@@ -112,6 +112,7 @@ Let's explore the dataset looking for NaN values.''')
     # st.write (correlation)
     fig, ax = plt.subplots (figsize = (14, 10))
     sns.heatmap (correlation, annot = True, cmap = 'Blues')
+    st.set_option('deprecation.showPyplotGlobalUse', False)
     st.pyplot ()
     st.caption ('Correlation Matrix')
 
