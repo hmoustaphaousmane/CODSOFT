@@ -7,14 +7,20 @@ import pickle
 
 import base64
 
-st.title ('Titanic Survival Prediction')
-st.image ('titanic.jpg')
-data = pd.read_csv ("tested.csv")
+@st.cache_resource ()
+def predict_sample (sample) :
+    loaded_model = pickle.load (open ('LogisticRegression.sav', 'rb'))
+    sample = np.array (sample).reshape (1, -1)
+    prediction = loaded_model.predict (sample) 
+    print (prediction [0])
 
-# app_mode = st.sidebar.selectbox ('Select Page', ['Home', 'Prediction'])
-app_mode = 'Exploratory Data Analysis'
+    if prediction [0] == 1 :
+        st.success ("Relieving news ! The passenger has survived the Titanic sinking.")
+    else :
+        st.error ("Our regrets ! The passenger did not survive the Titanic sinking.")
 
-if app_mode == 'Exploratory Data Analysis' :
+@st.cache_resource ()
+def exploratory_analysis (data) :
     st.header ('Exploratory Data Analysis')
     st.markdown ('Dataset :')
     st.write (data.head ())
@@ -37,14 +43,14 @@ if app_mode == 'Exploratory Data Analysis' :
 
     st.subheader ('3 Handling Missing (NaN) Values')
     st.markdown ('''This step is important to ensure accurate analysis and modeling.
-                There are various methods to handle missing values in a pandas dataframe :\n
-* Drop rows or columns\n
-* Fill with a constant value\n
-* Fill with statical measures (mean, median, mode)\n
-* Forward or backward fill\n
-* Interpolation\n
+                There are various methods to handle missing values in a pandas dataframe :\n\n
+    * Drop rows or columns\n
+    * Fill with a constant value\n
+    * Fill with statical measures (mean, median, mode)\n
+    * Forward or backward fill\n
+    * Interpolation\n
 
-Let's explore the dataset looking for NaN values.''')
+    \nLet's explore the dataset looking for NaN values.''')
     st.markdown (f"Missing values (NaN) in the resulting dataset :\n ")
     # Retrive the names of variable that presents NaN values
     nan_columns = [column for column in data.columns if data [column].isna ().sum () > 0]
@@ -116,9 +122,63 @@ Let's explore the dataset looking for NaN values.''')
     st.pyplot ()
     st.caption ('Correlation Matrix')
 
-elif app_mode == 'Prediction' :
-    st.image ('slider-short-1.png')
+def prediction () :
     st.subheader ('Sir/Mme, YOU need to fill all necessaty informations in order to make a prediction about the survival !')
-    st.sidebar.header ("Information about the client :")
     
-st.markdown ('Made by H. Moustapha Ousmane')
+    col1, col2, col3 = st.columns (3)
+    with col1 :
+        sex = st.radio ('Sex', ['Female', 'Male'])
+        Pclass = st.radio ('Pclass', [1, 2, 3])
+        embarked = st.radio ('Embarked', ['C', 'Q', 'S'])
+    with col2 :
+        SibSp = st.slider ('SibSp', 0, 1, 8)
+        Parch = st.slider ('Parch', 0, 1, 9)
+    with col3 :
+        Age = st.number_input ('Age', step = 1., format = "%.2f", min_value = 0.0)
+        Fare = st.number_input ('Fare', step = 1.0, format = "%.4f", min_value = 0.0)
+    
+    Sex_female, Sex_male = 0, 0
+    if sex == 'Female' :
+        Sex_female = 1
+    else :
+        Sex_male = 1
+    
+    Embarked_C, Embarked_Q, Embarked_S = 0, 0, 0
+    if embarked == 'C' :
+        Embarked_C = 1
+    elif embarked == 'Q' :
+        Embarked_Q = 1
+    else :
+        Embarked_S =1
+
+    sample = (Pclass, Age, SibSp, Parch, Fare, Sex_female, Sex_male, Embarked_C, Embarked_Q, Embarked_S)
+    if st.button ('Predict') :
+        result = predict_sample (sample)
+
+def main () :
+    st.title ('Titanic Survival Prediction')
+    st.image ('titanic.jpg')
+    data = pd.read_csv ("tested.csv")
+
+    app_mode = st.sidebar.selectbox ('Select Page', ['Home', 'Exploratory Data Analysis', 'Prediction'])
+    # app_mode = 'Exploratory Data Analysis'
+    # app_mode = 'Prediction'
+    if app_mode == 'Exploratory Data Analysis' :
+        exploratory_analysis (data)
+    elif app_mode == 'Prediction' :
+        prediction ()
+    else :
+        st.subheader ('Synopsis')
+        st.markdown ('''This project is about building a model that predicts
+        whether a passenger on the Titanic survived or not using the Titanic
+        dataset provided [here](https://www.kaggle.com/datasets/brendan45774/test-file).
+        It is a classic beginner project with readily available data. The
+        dataset typically used for this project contains information about
+        individual passengers, such as their age, gender, ticket class,
+        fare, cabin, and whether or not they survived.''')
+    
+    st.markdown ('Made by H. Moustapha Ousmane')
+
+
+if __name__ == '__main__' :
+    main ()
